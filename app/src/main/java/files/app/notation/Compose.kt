@@ -2,12 +2,12 @@ package files.app.notation
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,8 +18,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
@@ -27,8 +30,11 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalNavigationDrawer
@@ -40,13 +46,22 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -58,6 +73,8 @@ import files.app.notation.ui.theme.customBrown
 import files.app.notation.ui.theme.customTextColor
 import files.app.notation.ui.theme.customYellow
 import kotlinx.coroutines.launch
+
+
 
 @Preview(showSystemUi = true)
 @Composable
@@ -74,11 +91,14 @@ fun MainScreen() {
             topBar = { CustomAppBar(drawerState) },
             floatingActionButton = {
                 FloatingActionButton(
-                    modifier = Modifier.size(60.dp),
+                    modifier = Modifier
+                        .padding(bottom = 60.dp)
+                        .size(60.dp),
                     onClick = { /*TODO*/ },
                     contentColor = customBlackOne,
                     containerColor = customYellow,
-                    shape = CircleShape
+                    shape = CircleShape,
+                    elevation = FloatingActionButtonDefaults.elevation(50.dp)
                 ) {
                     Icon(
                         modifier = Modifier.size(60.dp),
@@ -109,9 +129,17 @@ fun MainScreen() {
                     }
                 }
                 item {
-                    Spacer(modifier = Modifier
-                        .fillMaxWidth()
-                        .height(100.dp))
+                    Row(
+                        Modifier
+                            .fillMaxHeight()
+                            .fillMaxWidth()
+                            .background(customBlackOne)
+                            .padding(vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        ShortNoteBox()
+                    }
                 }
             }
         }
@@ -175,6 +203,7 @@ fun ShortNoteBox() {
 @Composable
 fun CustomAppBar(drawerState: DrawerState) {
     val coroutineScope = rememberCoroutineScope()
+    var dialogState by remember { mutableStateOf(false) }
     TopAppBar(
         colors = TopAppBarDefaults.largeTopAppBarColors(containerColor = customBlackTwo),
         title = { Text("Notes", color = Color.White, fontSize = 20.sp) },
@@ -201,15 +230,37 @@ fun CustomAppBar(drawerState: DrawerState) {
                     modifier = Modifier.size(30.dp)
                 )
             }
-            IconButton(onClick = { /*TODO*/ }) {
+            IconButton(onClick = { dialogState = true }) {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
-                    contentDescription = "",
+                    contentDescription = "Settings",
                     tint = customYellow,
                     modifier = Modifier.size(30.dp)
                 )
             }
+            DropdownMenu(
+                expanded = dialogState,
+                onDismissRequest = { dialogState = false },
+                Modifier
+                    .background(customBlackTwo)
+                    .clip(RoundedCornerShape(10.dp))
+                    .border(1.dp, customBrown, RoundedCornerShape(10.dp))
+            ) {
+                settings.forEach {
+                    CustomDropdownMenuItem(title = it) {}
+                }
+            }
         }
+    )
+}
+
+private val settings = arrayOf("Setting 1", "Setting 2", "Setting 3", "Setting 4", "Setting 5")
+
+@Composable
+fun CustomDropdownMenuItem(title: String, toDo: () -> Unit) {
+    DropdownMenuItem(
+        text = { Text(text = title, color = customTextColor) }, onClick = { toDo.invoke() },
+        Modifier.background(customBlackTwo),
     )
 }
 
@@ -275,20 +326,86 @@ fun DrawerMenu() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Preview
 @Composable
 fun SearchScreen() {
+    val flowValue = remember { mutableStateOf("") }
+    val keyboard = LocalSoftwareKeyboardController.current
+
     Column(
         Modifier
             .fillMaxSize()
-            .background(customBlackOne),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(customBlackOne)
+            .padding(vertical = 20.dp, horizontal = 15.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        TextField(
-            value = "", onValueChange = {}, colors = TextFieldDefaults.textFieldColors(
-                focusedIndicatorColor = Color.Transparent
-            ), shape = CircleShape
+        Row() {
+            IconButton(onClick = { /*TODO*/ }) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Arrow back",
+                    tint = customBrown
+                )
+            }
+            TextField(
+                value = flowValue.value,
+                onValueChange = { flowValue.value = it },
+                colors = TextFieldDefaults.textFieldColors(
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    containerColor = customBlackTwo,
+                    cursorColor = customYellow,
+                    textColor = customTextColor
+                ),
+                shape = CircleShape,
+                modifier = Modifier
+                    .fillMaxWidth(),
+                trailingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "",
+                        tint = customYellow
+                    )
+                },
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Search,
+                    capitalization = KeyboardCapitalization.Words,
+                ),
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        keyboard?.hide()
+                    }
+                ),
+                placeholder = { Text(text = "Search for a note") },
+            )
+        }
+        Text(
+            "Last searches:",
+            Modifier
+                .padding(vertical = 10.dp, horizontal = 5.dp)
+                .fillMaxWidth(),
+            color = customTextColor,
+            fontSize = 18.sp
         )
+        LazyColumn(content = {
+            items(100) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(it.toString(), color = customTextColor)
+                    IconButton(onClick = { /*TODO*/ }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_clear_24),
+                            contentDescription = "delete",
+                            tint = customBrown
+                        )
+                    }
+                }
+            }
+        }, modifier = Modifier.fillMaxSize())
     }
 }
+
