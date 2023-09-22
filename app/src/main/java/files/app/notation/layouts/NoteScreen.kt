@@ -1,4 +1,4 @@
-package files.app.notation.compose
+package files.app.notation.layouts
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState

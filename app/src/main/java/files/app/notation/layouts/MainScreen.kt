@@ -1,4 +1,4 @@
-package files.app.notation.compose
+package files.app.notation.layouts
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background

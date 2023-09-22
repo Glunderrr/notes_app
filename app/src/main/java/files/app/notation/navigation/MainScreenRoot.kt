@@ -7,9 +7,9 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import files.app.notation.compose.MainScreen
-import files.app.notation.compose.SearchScreen
-import files.app.notation.compose.TextView
+import files.app.notation.layouts.MainScreen
+import files.app.notation.layouts.SearchScreen
+import files.app.notation.layouts.TextView
 
 @Composable
 fun MainScreenRoot() {
