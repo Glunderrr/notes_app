@@ -1,4 +1,4 @@
-package files.app.notation
+package files.app.notation.navigation
 
 sealed class Screens(val route: String){
     object Search: Screens("search")

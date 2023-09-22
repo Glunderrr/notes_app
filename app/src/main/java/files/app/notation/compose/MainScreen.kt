@@ -1,7 +1,5 @@
-package files.app.notation
+package files.app.notation.compose
 
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -16,31 +14,22 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
@@ -60,30 +49,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import files.app.notation.R
+import files.app.notation.navigation.Screens
 import files.app.notation.ui.theme.customBlackOne
 import files.app.notation.ui.theme.customBlackTwo
 import files.app.notation.ui.theme.customBrown
@@ -92,54 +71,14 @@ import files.app.notation.ui.theme.customYellow
 import kotlinx.coroutines.launch
 
 
-@Composable
-fun Navigation() {
-    val navController = rememberNavController()
-
-    NavHost(navController = navController, startDestination = Screens.Main.route) {
-        composable(
-            Screens.Main.route,
-            enterTransition = {
-                scaleIn(initialScale = 1f)
-            }
-        ) {
-            MainScreen(navController)
-        }
-        composable(
-            Screens.Search.route,
-            enterTransition = {
-                scaleIn(
-                    transformOrigin = TransformOrigin(0.8f, 0.05f),
-                    initialScale = 0.9f
-                )
-            },
-            exitTransition = {
-                scaleOut(targetScale = 1f)
-            }
-        ) {
-            SearchScreen(navController)
-        }
-        composable(
-            Screens.Note.route,
-            enterTransition = {
-                scaleIn(initialScale = 0.8f)
-            },
-            exitTransition = {
-                scaleOut(targetScale = 1f)
-            }) {
-            TextView(navController = navController)
-        }
-    }
-}
-
 @Preview(showSystemUi = true)
 @Composable
-private fun PreviewMAinScreen() {
-    MainScreen(rememberNavController())
+private fun PreviewMainScreen() {
+    MainScreen(rememberNavController(), listOf(""))
 }
 
 @Composable
-fun MainScreen(navController: NavController) {
+fun MainScreen(navController: NavController, settings: List<String>) {
     val showAddNoteDialog = remember { mutableStateOf(false) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
@@ -149,7 +88,7 @@ fun MainScreen(navController: NavController) {
 
     ModalNavigationDrawer(drawerContent = { DrawerMenu() }, drawerState = drawerState) {
         Scaffold(
-            topBar = { CustomAppBar(drawerState, navController) },
+            topBar = { CustomAppBar(drawerState, navController, settings) },
             floatingActionButton = {
                 FloatingActionButton(
                     modifier = Modifier
@@ -223,45 +162,10 @@ private fun ShortNoteBoxPreview() {
     }
 }
 
-@Composable
-fun ShortNoteBox(navController: NavController) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Card(
-            modifier = Modifier
-                .width(160.dp)
-                .height(120.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(customBlackTwo)
-                .clickable {
-                    navController.navigate(Screens.Note.route)
-                },
-            colors = CardDefaults.cardColors(
-                containerColor = customBlackTwo
-            )
-        ) {
-            Text(
-                text = "Content",
-                color = customTextColor,
-                modifier = Modifier.padding(10.dp),
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-        Text(
-            text = "Title",
-            fontWeight = FontWeight.Bold,
-            color = customTextColor,
-            fontSize = 18.sp,
-            modifier = Modifier.width(160.dp),
-            textAlign = TextAlign.Center,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CustomAppBar(drawerState: DrawerState, navController: NavController) {
+fun CustomAppBar(drawerState: DrawerState, navController: NavController, settings: List<String>) {
     val coroutineScope = rememberCoroutineScope()
     val dialogState = remember { mutableStateOf(false) }
     TopAppBar(
@@ -302,17 +206,6 @@ fun CustomAppBar(drawerState: DrawerState, navController: NavController) {
         }
     )
 }
-
-private val settings = listOf("Setting 1", "Setting 2", "Setting 3", "Setting 4", "Setting 5")
-
-@Composable
-fun CustomDropdownMenuItem(title: String, toDo: () -> Unit) {
-    DropdownMenuItem(
-        text = { Text(text = title, color = customTextColor) }, onClick = { toDo.invoke() },
-        Modifier.background(customBlackTwo),
-    )
-}
-
 
 @Preview(showBackground = true)
 @Composable
@@ -375,104 +268,6 @@ fun DrawerMenu() {
     }
 }
 
-@Preview
-@Composable
-fun PreviewSearchScreen() {
-    SearchScreen(rememberNavController())
-}
-
-@OptIn(ExperimentalComposeUiApi::class)
-@Composable
-fun SearchScreen(navController: NavController) {
-    val flowTextValue = remember { mutableStateOf("") }
-    val keyboard = LocalSoftwareKeyboardController.current
-
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(customBlackOne)
-            .padding(vertical = 20.dp, horizontal = 15.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Row {
-            IconButton(onClick = { navController.popBackStack() }) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Arrow back",
-                    tint = customYellow,
-                    modifier = Modifier.size(25.dp)
-                )
-            }
-            TextField(
-                value = flowTextValue.value,
-                onValueChange = { flowTextValue.value = it },
-                colors = TextFieldDefaults.colors(
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    focusedContainerColor = customBlackTwo,
-                    unfocusedContainerColor = customBlackTwo,
-                    cursorColor = customYellow,
-                    focusedTextColor = customTextColor,
-                    unfocusedTextColor = customTextColor
-                ),
-                shape = CircleShape,
-                modifier = Modifier
-                    .fillMaxWidth(),
-                trailingIcon = {
-                    IconButton(onClick = { flowTextValue.value = "" }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_clear_24),
-                            contentDescription = "cross delete",
-                            tint = customYellow
-                        )
-                    }
-                },
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    imeAction = ImeAction.Search,
-                    capitalization = KeyboardCapitalization.Words,
-                ),
-                keyboardActions = KeyboardActions(
-                    onSearch = { keyboard?.hide() }
-                ),
-                placeholder = { Text(text = "Search for a note") },
-            )
-        }
-        Text(
-            "Last searches:",
-            Modifier
-                .padding(vertical = 10.dp, horizontal = 5.dp)
-                .fillMaxWidth(),
-            color = customTextColor,
-            fontSize = 18.sp
-        )
-        LazyColumn(content = {
-            items(20) {
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            flowTextValue.value = it.toString()
-                        },
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        it.toString(),
-                        color = customTextColor,
-                        textDecoration = TextDecoration.Underline
-                    )
-                    IconButton(onClick = { /*TODO*/ }) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "delete",
-                            tint = customYellow
-                        )
-                    }
-                }
-            }
-        }, modifier = Modifier.fillMaxSize())
-    }
-}
 
 @Preview
 @Composable
@@ -587,100 +382,6 @@ fun FolderDropDownMenu() {
                     showDropdownMenu.value = false
                 }
             }
-        }
-    }
-}
-
-@Preview
-@Composable
-fun PreviewTextView() {
-    TextView(rememberNavController())
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun TextView(navController: NavController) {
-
-    val showMenuState = remember { mutableStateOf(false) }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(text = "Title", color = customTextColor) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = customBlackTwo
-                ),
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Exit",
-                            tint = customYellow,
-                            modifier = Modifier.size(25.dp)
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { showMenuState.value = true }) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = "Settings",
-                            tint = customYellow,
-                            modifier = Modifier.size(30.dp)
-                        )
-                        CustomDropDownMenu(showMenuState, settings)
-                    }
-                },
-            )
-        },
-        containerColor = customBlackOne
-    ) {
-        val textFlow = remember { mutableStateOf("") }
-        val textFieldState = remember { TextFieldValue("This is some text.") }
-
-        Column(
-            modifier = Modifier
-                .padding(it)
-                .fillMaxSize()
-                .padding(10.dp)
-        ) {
-            TextField(
-                value = textFlow.value,
-                onValueChange = { newText ->
-                    textFlow.value = newText
-                },
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    focusedTextColor = customTextColor,
-                    unfocusedTextColor = customTextColor,
-                    cursorColor = customYellow
-                ),
-                textStyle = TextStyle(
-                    textDecoration = TextDecoration.None,
-                    fontSize = 15.sp
-                ),
-                visualTransformation = VisualTransformation.None,
-                modifier = Modifier
-                    .fillMaxSize()
-            )
-        }
-    }
-}
-
-@Composable
-fun CustomDropDownMenu(expanded: MutableState<Boolean>, itemList: List<String>) {
-    DropdownMenu(
-        expanded = expanded.value,
-        onDismissRequest = { expanded.value = false },
-        Modifier
-            .background(customBlackTwo)
-            .clip(RoundedCornerShape(10.dp))
-            .border(1.dp, customBrown, RoundedCornerShape(10.dp))
-    ) {
-        itemList.forEach {
-            CustomDropdownMenuItem(title = it) {}
         }
     }
 }
