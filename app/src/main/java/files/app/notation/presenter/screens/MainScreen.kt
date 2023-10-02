@@ -1,4 +1,4 @@
-package files.app.notation.layouts
+package files.app.notation.presenter.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -44,7 +45,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -56,13 +57,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import files.app.notation.R
-import files.app.notation.navigation.Screens
+import files.app.notation.presenter.screens.navigation.Screens
+import files.app.notation.presenter.screens.viewModels.mainViewModels.MainOnEvent
+import files.app.notation.presenter.screens.viewModels.mainViewModels.MainSettings
+import files.app.notation.presenter.screens.viewModels.mainViewModels.MainViewModel
 import files.app.notation.ui.theme.customBlackOne
 import files.app.notation.ui.theme.customBlackTwo
 import files.app.notation.ui.theme.customBrown
@@ -70,31 +73,26 @@ import files.app.notation.ui.theme.customTextColor
 import files.app.notation.ui.theme.customYellow
 import kotlinx.coroutines.launch
 
-
-@Preview(showSystemUi = true)
 @Composable
-private fun PreviewMainScreen() {
-    MainScreen(rememberNavController(), listOf(""))
-}
+fun MainScreen(
+    navController: NavController,
+    viewModel: MainViewModel = hiltViewModel(),
+    drawerState: DrawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+) {
+    if (viewModel.showAddNoteDialog) AddNoteDialog(viewModel)
 
-@Composable
-fun MainScreen(navController: NavController, settings: List<String>) {
-    val showAddNoteDialog = remember { mutableStateOf(false) }
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-
-    if (showAddNoteDialog.value) {
-        AddNoteDialog(showState = showAddNoteDialog)
-    }
-
-    ModalNavigationDrawer(drawerContent = { DrawerMenu() }, drawerState = drawerState) {
+    ModalNavigationDrawer(
+        drawerContent = { DrawerMenu(viewModel) },
+        drawerState = drawerState
+    ) {
         Scaffold(
-            topBar = { CustomAppBar(drawerState, navController, settings) },
+            topBar = { CustomAppBar(viewModel, navController, drawerState) },
             floatingActionButton = {
                 FloatingActionButton(
+                    onClick = { viewModel.onEvent(MainOnEvent.OpenAddNoteDialog) },
                     modifier = Modifier
                         .padding(bottom = 60.dp)
                         .size(60.dp),
-                    onClick = { showAddNoteDialog.value = true },
                     contentColor = customBlackOne,
                     containerColor = customYellow,
                     shape = CircleShape,
@@ -103,7 +101,7 @@ fun MainScreen(navController: NavController, settings: List<String>) {
                     Icon(
                         modifier = Modifier.size(60.dp),
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Add icon",
+                        contentDescription = "Add note icon",
                     )
                 }
             }
@@ -114,7 +112,12 @@ fun MainScreen(navController: NavController, settings: List<String>) {
                     .background(color = customBlackOne)
                     .padding(top = padding.calculateTopPadding() + 5.dp)
             ) {
-                items(20) {
+                /*item {
+                    viewModel.notesList.collectAsState(initial = emptyList()).value.forEach {
+                        ShortNoteBox(navController, it)
+                    }
+                }*/
+                /*items(20) {
                     Row(
                         Modifier
                             .fillMaxHeight()
@@ -127,53 +130,26 @@ fun MainScreen(navController: NavController, settings: List<String>) {
                         ShortNoteBox(navController)
                         ShortNoteBox(navController)
                     }
-                }
-                item {
-                    Row(
-                        Modifier
-                            .fillMaxHeight()
-                            .fillMaxWidth()
-                            .background(customBlackOne)
-                            .padding(vertical = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        ShortNoteBox(navController)
-                    }
-                }
+                }*/
             }
         }
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-private fun ShortNoteBoxPreview() {
-    Row(
-        Modifier
-            .fillMaxHeight()
-            .fillMaxWidth()
-            .background(customBlackOne),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        ShortNoteBox(rememberNavController())
-        ShortNoteBox(rememberNavController())
-    }
-}
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CustomAppBar(drawerState: DrawerState, navController: NavController, settings: List<String>) {
-    val coroutineScope = rememberCoroutineScope()
-    val dialogState = remember { mutableStateOf(false) }
+private fun CustomAppBar(
+    viewModel: MainViewModel,
+    navController: NavController,
+    drawerState: DrawerState
+) {
+    val localCoroutineScope = rememberCoroutineScope()
     TopAppBar(
         colors = TopAppBarDefaults.largeTopAppBarColors(containerColor = customBlackTwo),
         title = { Text("Notes", color = Color.White, fontSize = 20.sp) },
         navigationIcon = {
             IconButton(onClick = {
-                coroutineScope.launch {
+                localCoroutineScope.launch {
                     drawerState.open()
                 }
             }) {
@@ -194,7 +170,7 @@ fun CustomAppBar(drawerState: DrawerState, navController: NavController, setting
                     modifier = Modifier.size(30.dp)
                 )
             }
-            IconButton(onClick = { dialogState.value = true }) {
+            IconButton(onClick = { viewModel.onEvent(MainOnEvent.OpenSettings) }) {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
                     contentDescription = "Settings",
@@ -202,14 +178,18 @@ fun CustomAppBar(drawerState: DrawerState, navController: NavController, setting
                     modifier = Modifier.size(30.dp)
                 )
             }
-            CustomDropDownMenu(dialogState, settings)
+            CustomDropDownMenu(viewModel.showSettingsState) {
+                MainSettings.values().forEach {
+                    CustomDropdownMenuItem(title = it.nameValue) {}
+                }
+            }
         }
     )
 }
 
-@Preview(showBackground = true)
 @Composable
-fun DrawerMenu() {
+private fun DrawerMenu(viewModel: MainViewModel) {
+    val folders = viewModel.folders.collectAsState(initial = emptyList())
     Column(
         modifier = Modifier
             .fillMaxHeight()
@@ -234,9 +214,9 @@ fun DrawerMenu() {
         LazyColumn(modifier = Modifier
             .fillMaxHeight(0.9f)
             .fillMaxWidth(), content = {
-            items(50) {
+            items(folders.value) {
                 Row(Modifier.padding(vertical = 5.dp, horizontal = 10.dp)) {
-                    Text(text = it.toString(), color = customTextColor)
+                    Text(text = it.name, color = customTextColor)
                 }
             }
         })
@@ -268,22 +248,16 @@ fun DrawerMenu() {
     }
 }
 
-
-@Preview
 @Composable
-fun PreviewAddNoteDialog() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        AddNoteDialog(remember { mutableStateOf(true) })
-    }
-}
-
-@Composable
-fun AddNoteDialog(showState: MutableState<Boolean>) {
+private fun AddNoteDialog(viewModel: MainViewModel) {
     AlertDialog(
-        onDismissRequest = { showState.value = false },
+        onDismissRequest = { viewModel.onEvent(MainOnEvent.CloseAddNoteDialog) },
         confirmButton = {
             Button(
-                onClick = { showState.value = false }, colors = ButtonDefaults.buttonColors(
+                onClick = {
+
+                },
+                colors = ButtonDefaults.buttonColors(
                     containerColor = customYellow
                 )
             ) {
@@ -298,7 +272,7 @@ fun AddNoteDialog(showState: MutableState<Boolean>) {
         icon = {
             Icon(
                 painter = painterResource(id = R.drawable.create_pen),
-                contentDescription = "Create icon",
+                contentDescription = "Create note icon",
                 tint = customBlackOne,
                 modifier = Modifier
                     .clip(CircleShape)
@@ -320,7 +294,7 @@ fun AddNoteDialog(showState: MutableState<Boolean>) {
 }
 
 @Composable
-fun CustomDialogTextField() {
+private fun CustomDialogTextField() {
     val textState = remember { mutableStateOf("") }
 
     TextField(
@@ -353,7 +327,7 @@ fun CustomDialogTextField() {
 }
 
 @Composable
-fun FolderDropDownMenu() {
+private fun FolderDropDownMenu() {
     val showDropdownMenu = remember { mutableStateOf(false) }
     val folderState = remember { mutableStateOf("General folder") }
     Row(

@@ -1,4 +1,4 @@
-package files.app.notation.navigation
+package files.app.notation.presenter.screens.navigation
 
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
@@ -7,9 +7,10 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import files.app.notation.layouts.MainScreen
-import files.app.notation.layouts.SearchScreen
-import files.app.notation.layouts.TextView
+import files.app.notation.presenter.screens.MainScreen
+import files.app.notation.presenter.screens.SearchScreen
+import files.app.notation.presenter.screens.TextView
+
 
 @Composable
 fun MainScreenRoot() {
@@ -21,7 +22,7 @@ fun MainScreenRoot() {
                 scaleIn(initialScale = 1f)
             }
         ) {
-            MainScreen(navController, settings)
+            MainScreen(navController)
         }
         composable(
             Screens.Search.route,

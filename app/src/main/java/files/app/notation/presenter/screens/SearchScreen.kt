@@ -1,4 +1,4 @@
-package files.app.notation.layouts
+package files.app.notation.presenter.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

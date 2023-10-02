@@ -1,4 +1,4 @@
-package files.app.notation.layouts
+package files.app.notation.presenter.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,13 +24,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import files.app.notation.navigation.Screens
+import files.app.notation.data.bd.folderDB.note.Note
+import files.app.notation.presenter.screens.navigation.Screens
 import files.app.notation.ui.theme.customBlackTwo
 import files.app.notation.ui.theme.customBrown
 import files.app.notation.ui.theme.customTextColor
 
 @Composable
-fun ShortNoteBox(navController: NavController) {
+fun ShortNoteBox(navController: NavController, note: Note) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Card(
             modifier = Modifier
@@ -46,14 +47,14 @@ fun ShortNoteBox(navController: NavController) {
             )
         ) {
             Text(
-                text = "Content",
+                text = note.content,
                 color = customTextColor,
                 modifier = Modifier.padding(10.dp),
                 overflow = TextOverflow.Ellipsis
             )
         }
         Text(
-            text = "Title",
+            text = note.title,
             fontWeight = FontWeight.Bold,
             color = customTextColor,
             fontSize = 18.sp,
@@ -67,18 +68,16 @@ fun ShortNoteBox(navController: NavController) {
 
 
 @Composable
-fun CustomDropDownMenu(expanded: MutableState<Boolean>, itemList: List<String>) {
+fun CustomDropDownMenu(show: MutableState<Boolean>, content: @Composable () -> Unit) {
     DropdownMenu(
-        expanded = expanded.value,
-        onDismissRequest = { expanded.value = false },
+        expanded = show.value,
+        onDismissRequest = { show.value = false },
         Modifier
             .background(customBlackTwo)
             .clip(RoundedCornerShape(10.dp))
             .border(1.dp, customBrown, RoundedCornerShape(10.dp))
     ) {
-        itemList.forEach {
-            CustomDropdownMenuItem(title = it) {}
-        }
+        content.invoke()
     }
 }
 

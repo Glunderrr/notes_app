@@ -1,4 +1,4 @@
-package files.app.notation.layouts
+package files.app.notation.presenter.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -57,7 +57,7 @@ fun TextView(navController: NavController, settings: List<String>) {
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Exit",
                             tint = customYellow,
-                            modifier = Modifier.size(25.dp)
+                            modifier = Modifier.size(30.dp)
                         )
                     }
                 },
@@ -69,19 +69,21 @@ fun TextView(navController: NavController, settings: List<String>) {
                             tint = customYellow,
                             modifier = Modifier.size(30.dp)
                         )
-                        CustomDropDownMenu(showMenuState, settings)
+                        CustomDropDownMenu(showMenuState){
+
+                        }
                     }
                 },
             )
         },
         containerColor = customBlackOne
     ) {
-        CustomTextField(it)
+        CustomTextField(paddingValue = it)
     }
 }
 
 @Composable
-fun CustomTextField(paddingValues: PaddingValues) {
+fun CustomTextField(paddingValue: PaddingValues) {
     val textFlow = remember {
         mutableStateOf(
             TextFieldValue("Content")
@@ -90,7 +92,7 @@ fun CustomTextField(paddingValues: PaddingValues) {
 
     Column(
         modifier = Modifier
-            .padding(paddingValues)
+            .padding(paddingValue)
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
     ) {
