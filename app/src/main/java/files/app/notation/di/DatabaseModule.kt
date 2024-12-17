@@ -12,6 +12,7 @@ import files.app.notation.data.bd.folderDB.DB
 import files.app.notation.data.bd.folderDB.Folder
 import files.app.notation.data.bd.folderDB.FolderDao
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import javax.inject.Singleton
@@ -27,13 +28,20 @@ object DatabaseModule {
             context = context,
             DB::class.java,
             "folders_db"
-        ).build().apply {
-            GlobalScope.launch {
-                folderDao.upsertFolder(Folder(name = "General folder"))
+        ).fallbackToDestructiveMigration()
+            .build()
+            .apply {
+                GlobalScope.launch(Dispatchers.IO) {
+                    /*folderDao.getAllFolders().collect {
+                        it.forEach { folder ->
+                            folderDao.deleteFolder(folder)
+                        }
+                    }*/
+                    folderDao.upsertFolder(Folder(name = "General folder"))
+                }
+            }.also {
+                Log.i("MY_DB", "create db: $it")
             }
-        }.also {
-            Log.i("MY_DB", "create db: $it")
-        }
     }
 
     @Provides

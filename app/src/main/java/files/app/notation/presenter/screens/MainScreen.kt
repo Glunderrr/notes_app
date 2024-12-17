@@ -57,10 +57,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import files.app.notation.R
 import files.app.notation.presenter.screens.navigation.Screens
 import files.app.notation.presenter.screens.viewModels.mainViewModels.MainOnEvent
@@ -73,38 +75,23 @@ import files.app.notation.ui.theme.customTextColor
 import files.app.notation.ui.theme.customYellow
 import kotlinx.coroutines.launch
 
+private lateinit var viewModel: MainViewModel
+
 @Composable
 fun MainScreen(
     navController: NavController,
-    viewModel: MainViewModel = hiltViewModel(),
     drawerState: DrawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 ) {
-    if (viewModel.showAddNoteDialog) AddNoteDialog(viewModel)
+    viewModel = hiltViewModel()
+    if (viewModel.showAddNoteDialog) AddNoteDialog()
 
     ModalNavigationDrawer(
-        drawerContent = { DrawerMenu(viewModel) },
+        drawerContent = { DrawerMenu() },
         drawerState = drawerState
     ) {
         Scaffold(
-            topBar = { CustomAppBar(viewModel, navController, drawerState) },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { viewModel.onEvent(MainOnEvent.OpenAddNoteDialog) },
-                    modifier = Modifier
-                        .padding(bottom = 60.dp)
-                        .size(60.dp),
-                    contentColor = customBlackOne,
-                    containerColor = customYellow,
-                    shape = CircleShape,
-                    elevation = FloatingActionButtonDefaults.elevation(50.dp)
-                ) {
-                    Icon(
-                        modifier = Modifier.size(60.dp),
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add note icon",
-                    )
-                }
-            }
+            topBar = { CustomAppBar(navController, drawerState) },
+            floatingActionButton = { CustomFloatingButton() }
         ) { padding ->
             LazyColumn(
                 modifier = Modifier
@@ -139,7 +126,6 @@ fun MainScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CustomAppBar(
-    viewModel: MainViewModel,
     navController: NavController,
     drawerState: DrawerState
 ) {
@@ -149,9 +135,7 @@ private fun CustomAppBar(
         title = { Text("Notes", color = Color.White, fontSize = 20.sp) },
         navigationIcon = {
             IconButton(onClick = {
-                localCoroutineScope.launch {
-                    drawerState.open()
-                }
+                localCoroutineScope.launch { drawerState.open() }
             }) {
                 Icon(
                     imageVector = Icons.Default.Menu,
@@ -188,7 +172,7 @@ private fun CustomAppBar(
 }
 
 @Composable
-private fun DrawerMenu(viewModel: MainViewModel) {
+private fun DrawerMenu() {
     val folders = viewModel.folders.collectAsState(initial = emptyList())
     Column(
         modifier = Modifier
@@ -249,7 +233,7 @@ private fun DrawerMenu(viewModel: MainViewModel) {
 }
 
 @Composable
-private fun AddNoteDialog(viewModel: MainViewModel) {
+private fun AddNoteDialog() {
     AlertDialog(
         onDismissRequest = { viewModel.onEvent(MainOnEvent.CloseAddNoteDialog) },
         confirmButton = {
@@ -357,5 +341,26 @@ private fun FolderDropDownMenu() {
                 }
             }
         }
+    }
+}
+
+
+@Composable
+private fun CustomFloatingButton() {
+    FloatingActionButton(
+        onClick = { viewModel.onEvent(MainOnEvent.OpenAddNoteDialog) },
+        modifier = Modifier
+            .padding(bottom = 60.dp)
+            .size(60.dp),
+        contentColor = customBlackOne,
+        containerColor = customYellow,
+        shape = CircleShape,
+        elevation = FloatingActionButtonDefaults.elevation(50.dp)
+    ) {
+        Icon(
+            modifier = Modifier.size(60.dp),
+            imageVector = Icons.Default.Add,
+            contentDescription = "Add note icon",
+        )
     }
 }

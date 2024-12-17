@@ -20,6 +20,7 @@ fun MainScreenRoot() {
             Screens.Main.route,
             enterTransition = {
                 scaleIn(initialScale = 1f)
+
             }
         ) {
             MainScreen(navController)

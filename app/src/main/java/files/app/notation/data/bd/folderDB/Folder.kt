@@ -7,9 +7,8 @@ import files.app.notation.data.bd.folderDB.note.Note
 
 @Entity(tableName = "folder_table")
 data class Folder(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long? = null,
+    @PrimaryKey
     val name: String,
     @TypeConverters(MutableListConverter::class)
-    val notesMutableList: MutableList<Note> = mutableListOf()
+    val notesList: MutableList<Note> = mutableListOf()
 )

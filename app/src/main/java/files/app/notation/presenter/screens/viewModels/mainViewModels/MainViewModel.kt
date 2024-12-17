@@ -7,8 +7,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import files.app.notation.data.bd.folderDB.note.Note
 import files.app.notation.repository.Repository
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -17,7 +17,17 @@ class MainViewModel @Inject constructor(
     private val repository: Repository
 ) : ViewModel() {
     val folders = repository.getAllFolders()
-/*    val notes =repository.getAllNotes()*/
+
+    private suspend fun collectAllNotes():MutableList<Note>{
+        val result = mutableListOf<Note>()
+        folders.collect{
+            it.forEach { folder->
+                result.addAll(folder.notesList)
+            }
+        }
+        return result
+    }
+
 
     val showAddNoteDialog: Boolean
         get() = _showAddNoteDialog
@@ -28,7 +38,7 @@ class MainViewModel @Inject constructor(
     fun onEvent(event: MainOnEvent) {
         when (event) {
             is MainOnEvent.AddNote -> viewModelScope.launch {
-                event.folder.notesMutableList.add(event.note).also {
+                event.folder.notesList.add(event.note).also {
                     Log.i(
                         "ADD_NOTE_TO_FOLDER",
                         "note:${event.note}; folder:${event.folder}"

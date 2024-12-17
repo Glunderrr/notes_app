@@ -24,7 +24,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import files.app.notation.data.bd.folderDB.note.Note
 import files.app.notation.presenter.screens.navigation.Screens
 import files.app.notation.ui.theme.customBlackTwo
 import files.app.notation.ui.theme.customBrown
